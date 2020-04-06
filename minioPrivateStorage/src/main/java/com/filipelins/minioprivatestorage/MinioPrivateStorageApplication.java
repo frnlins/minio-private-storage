@@ -9,5 +9,4 @@ public class MinioPrivateStorageApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(MinioPrivateStorageApplication.class, args);
 	}
-
 }
