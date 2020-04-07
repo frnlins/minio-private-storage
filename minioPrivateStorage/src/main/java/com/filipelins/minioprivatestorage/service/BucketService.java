@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.filipelins.minioprivatestorage.domain.BucketTO;
 
 import io.minio.MinioClient;
+import io.minio.Result;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -20,12 +21,16 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
 import io.minio.errors.XmlParserException;
 import io.minio.messages.Bucket;
+import io.minio.messages.Item;
 
 @Service
 public class BucketService {
 
 	@Autowired
 	private MinioClient minioClient;
+	
+	@Autowired
+	private ObjectService objectService;
 
 	public List<BucketTO> listBuckets() {
 		List<BucketTO> retorno = null;
@@ -54,8 +59,14 @@ public class BucketService {
 
 	public void deleteBucket(BucketTO bucketTO) {
 		try {
-			if(isBucketExists(bucketTO.getNome()))
+			if(isBucketExists(bucketTO.getNome())) {
+				
+				if(!isBucketEmpty(bucketTO.getNome())) {
+					objectService.deleteBucketObjects(bucketTO);
+				}
+				
 				minioClient.removeBucket(bucketTO.getNome());
+			}
 		} catch (InvalidKeyException | InvalidBucketNameException | IllegalArgumentException | NoSuchAlgorithmException
 				| InsufficientDataException | XmlParserException | ErrorResponseException | InternalException
 				| InvalidResponseException | IOException e) {
@@ -63,7 +74,20 @@ public class BucketService {
 		}
 	}
 
-	public boolean isBucketExists(String bucketName) {
+	private boolean isBucketEmpty(String bucketName) {
+		boolean empty = true;
+		
+		try {
+			Iterable<Result<Item>> results = minioClient.listObjects(bucketName);
+			empty = results.iterator().hasNext() ? false : true;
+		} catch (XmlParserException e) {
+			System.out.println("Erro ao avaliar se o bucket: " + bucketName + " está vazio! " + e);
+		}
+		
+		return empty;
+	}
+
+	private boolean isBucketExists(String bucketName) {
 		boolean retorno = false;
 		try {
 			retorno = minioClient.bucketExists(bucketName);
