@@ -31,8 +31,8 @@ public class BucketService {
 		List<BucketTO> retorno = null;
 		try {
 			List<Bucket> lista = minioClient.listBuckets();
-			
-			if(lista != null && !lista.isEmpty()) {
+
+			if (lista != null && !lista.isEmpty()) {
 				retorno = lista.stream().map(obj -> new BucketTO(obj)).collect(Collectors.toList());
 			}
 		} catch (InvalidKeyException | InvalidBucketNameException | IllegalArgumentException | NoSuchAlgorithmException
@@ -42,7 +42,7 @@ public class BucketService {
 		}
 		return retorno;
 	}
-	
+
 	public void createBucket(BucketTO bucketTO) {
 		try {
 			minioClient.makeBucket(bucketTO.getNome());
@@ -50,5 +50,28 @@ public class BucketService {
 				| MinioException e) {
 			System.out.println("Erro ao criar um bucket: " + e);
 		}
+	}
+
+	public void deleteBucket(BucketTO bucketTO) {
+		try {
+			if(isBucketExists(bucketTO.getNome()))
+				minioClient.removeBucket(bucketTO.getNome());
+		} catch (InvalidKeyException | InvalidBucketNameException | IllegalArgumentException | NoSuchAlgorithmException
+				| InsufficientDataException | XmlParserException | ErrorResponseException | InternalException
+				| InvalidResponseException | IOException e) {
+			System.out.println("Erro ao deletar um bucket: " + e);
+		}
+	}
+
+	public boolean isBucketExists(String bucketName) {
+		boolean retorno = false;
+		try {
+			retorno = minioClient.bucketExists(bucketName);
+		} catch (InvalidKeyException | InvalidBucketNameException | IllegalArgumentException | NoSuchAlgorithmException
+				| InsufficientDataException | XmlParserException | ErrorResponseException | InternalException
+				| InvalidResponseException | IOException e) {
+			System.out.println("Erro ao avaliar se o Bucket: '" + bucketName + "' existe! ");
+		}
+		return retorno;
 	}
 }
