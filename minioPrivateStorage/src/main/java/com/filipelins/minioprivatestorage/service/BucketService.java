@@ -48,12 +48,12 @@ public class BucketService {
 		return retorno;
 	}
 
-	public void createBucket(BucketTO bucketTO) {
+	public void createBucket(BucketTO bucketTO) throws MinioException {
 		try {
 			minioClient.makeBucket(bucketTO.getNome());
 		} catch (InvalidKeyException | IllegalArgumentException | NoSuchAlgorithmException | IOException
 				| MinioException e) {
-			System.out.println("Erro ao criar um bucket: " + e);
+			throw new MinioException("O bucket não pode ser criado! ERRO: " + e.getMessage());
 		}
 	}
 
