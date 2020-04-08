@@ -28,7 +28,7 @@ public class BucketService {
 
 	@Autowired
 	private MinioClient minioClient;
-	
+
 	@Autowired
 	private ObjectService objectService;
 
@@ -57,45 +57,24 @@ public class BucketService {
 		}
 	}
 
-	public void deleteBucket(BucketTO bucketTO) {
+	public void deleteBucket(BucketTO bucketTO) throws MinioException {
 		try {
-			if(isBucketExists(bucketTO.getNome())) {
+			if (minioClient.bucketExists(bucketTO.getNome())) {
 				
-				if(!isBucketEmpty(bucketTO.getNome())) {
-					objectService.deleteBucketObjects(bucketTO);
+				Iterable<Result<Item>> results = minioClient.listObjects(bucketTO.getNome());
+				
+				if(results.iterator().hasNext()) {
+					objectService.deleteBucketObjects(bucketTO, results);
 				}
-				
+
 				minioClient.removeBucket(bucketTO.getNome());
+			} else {
+				throw new MinioException("O bucket: '" + bucketTO.getNome() + "' não existe");
 			}
-		} catch (InvalidKeyException | InvalidBucketNameException | IllegalArgumentException | NoSuchAlgorithmException
-				| InsufficientDataException | XmlParserException | ErrorResponseException | InternalException
-				| InvalidResponseException | IOException e) {
-			System.out.println("Erro ao deletar um bucket: " + e);
+		} catch (InvalidKeyException | IllegalArgumentException | NoSuchAlgorithmException | IOException
+				| MinioException e) {
+			throw new MinioException(
+					"Erro ao deletar o bucket: '" + bucketTO.getNome() + "'. ERROR: " + e.getMessage());
 		}
-	}
-
-	private boolean isBucketEmpty(String bucketName) {
-		boolean empty = true;
-		
-		try {
-			Iterable<Result<Item>> results = minioClient.listObjects(bucketName);
-			empty = results.iterator().hasNext() ? false : true;
-		} catch (XmlParserException e) {
-			System.out.println("Erro ao avaliar se o bucket: " + bucketName + " está vazio! " + e);
-		}
-		
-		return empty;
-	}
-
-	private boolean isBucketExists(String bucketName) {
-		boolean retorno = false;
-		try {
-			retorno = minioClient.bucketExists(bucketName);
-		} catch (InvalidKeyException | InvalidBucketNameException | IllegalArgumentException | NoSuchAlgorithmException
-				| InsufficientDataException | XmlParserException | ErrorResponseException | InternalException
-				| InvalidResponseException | IOException e) {
-			System.out.println("Erro ao avaliar se o Bucket: '" + bucketName + "' existe! ");
-		}
-		return retorno;
 	}
 }

@@ -42,7 +42,12 @@ public class BucketResource {
 	}
 
 	@DeleteMapping
-	public void delete(@RequestBody BucketTO bucketTO) {
-		service.deleteBucket(bucketTO);
+	public ResponseEntity<String> delete(@RequestBody BucketTO bucketTO) {
+		try {
+			service.deleteBucket(bucketTO);
+			return new ResponseEntity<String>("O bucket: '" + bucketTO.getNome() + "' foi deletado com sucesso!" , HttpStatus.OK);
+		} catch (MinioException e) {
+			return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
+		}
 	}
 }
