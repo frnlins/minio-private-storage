@@ -30,7 +30,7 @@ public class MinIOConfig {
 		} catch (InvalidPortException e) {
 			System.out.println("Invalid Port: " + e);
 		}
-		System.out.println("MinIO Cliente created!");
+		System.out.println("MinIO Client created!");
 		return mc;
 	}
 }

@@ -9,11 +9,13 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.filipelins.minioprivatestorage.domain.BucketTO;
 import com.filipelins.minioprivatestorage.domain.ObjectTO;
 
 import io.minio.MinioClient;
+import io.minio.PutObjectOptions;
 import io.minio.Result;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
@@ -125,6 +127,18 @@ public class MinioService {
 		} catch (InvalidKeyException | IllegalArgumentException | NoSuchAlgorithmException | IOException
 				| MinioException e) {
 			throw new MinioException("Erros ao deletar o(s) objeto(s):\n" + e.getMessage());
+		}
+	}
+
+	public void uploadObject(String bucketName, MultipartFile multipartFile) {
+		PutObjectOptions pop = new PutObjectOptions(multipartFile.getSize(), -1);
+		try {
+			minioClient.putObject(bucketName, multipartFile.getOriginalFilename(), multipartFile.getInputStream(), pop);
+		} catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | XmlParserException
+				| ErrorResponseException | InternalException | IllegalArgumentException | InsufficientDataException
+				| InvalidResponseException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }
