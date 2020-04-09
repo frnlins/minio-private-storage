@@ -15,16 +15,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.filipelins.minioprivatestorage.domain.BucketTO;
 import com.filipelins.minioprivatestorage.domain.ObjectTO;
-import com.filipelins.minioprivatestorage.service.BucketService;
+import com.filipelins.minioprivatestorage.service.MinioService;
 
 import io.minio.errors.MinioException;
 
 @RestController
-@RequestMapping("/buckets")
-public class BucketResource {
+@RequestMapping("/minio")
+public class MinioResource {
 
 	@Autowired
-	private BucketService service;
+	private MinioService service;
 
 	@GetMapping
 	public ResponseEntity<List<BucketTO>> listBuckets() {

@@ -23,16 +23,14 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
 import io.minio.errors.XmlParserException;
 import io.minio.messages.Bucket;
+import io.minio.messages.DeleteError;
 import io.minio.messages.Item;
 
 @Service
-public class BucketService {
+public class MinioService {
 
 	@Autowired
 	private MinioClient minioClient;
-
-	@Autowired
-	private ObjectService objectService;
 
 	public List<BucketTO> listBuckets() {
 		List<BucketTO> retorno = null;
@@ -66,7 +64,7 @@ public class BucketService {
 				Iterable<Result<Item>> results = minioClient.listObjects(bucketTO.getNome());
 
 				if (results.iterator().hasNext()) {
-					objectService.deleteBucketObjects(bucketTO, results);
+					deleteBucketObjects(bucketTO, results);
 				}
 
 				minioClient.removeBucket(bucketTO.getNome());
@@ -88,11 +86,45 @@ public class BucketService {
 			for (Result<Item> obj : objects) {
 				lista.add(new ObjectTO(obj.get()));
 			}
-		} catch (MinioException | InvalidKeyException | IllegalArgumentException | NoSuchAlgorithmException | IOException e) {
+		} catch (MinioException | InvalidKeyException | IllegalArgumentException | NoSuchAlgorithmException
+				| IOException e) {
 			throw new MinioException(
 					"Erro ao listar os objetos do bucket: '" + bucketName + "' ERROR: " + e.getMessage());
 		}
 
 		return lista;
+	}
+
+	public void deleteBucketObjects(BucketTO bucketTO) throws MinioException {
+		Iterable<Result<Item>> results = minioClient.listObjects(bucketTO.getNome());
+		deleteBucketObjects(bucketTO, results);
+	}
+
+	public void deleteBucketObjects(BucketTO bucketTO, Iterable<Result<Item>> results) throws MinioException {
+		List<String> objectNames = new ArrayList<String>();
+		StringBuilder sb = new StringBuilder();
+
+		try {
+			// Obtém o nome dos objetos
+			for (Result<Item> objeto : results) {
+				objectNames.add(objeto.get().objectName());
+			}
+
+			// Realiza o delete dos objetos
+			Iterable<Result<DeleteError>> erroResults = minioClient.removeObjects(bucketTO.getNome(), objectNames);
+
+			// Confere possíveis erros ao deletar os objetos.
+			for (Result<DeleteError> deleteError : erroResults) {
+				DeleteError error = deleteError.get();
+				sb.append("Error in deleting object " + error.objectName() + "; " + error.message() + "\n");
+			}
+
+			if (sb.length() > 0) {
+				throw new MinioException(sb.toString());
+			}
+		} catch (InvalidKeyException | IllegalArgumentException | NoSuchAlgorithmException | IOException
+				| MinioException e) {
+			throw new MinioException("Erros ao deletar o(s) objeto(s):\n" + e.getMessage());
+		}
 	}
 }
