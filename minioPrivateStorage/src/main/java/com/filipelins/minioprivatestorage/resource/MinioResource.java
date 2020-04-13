@@ -3,6 +3,8 @@ package com.filipelins.minioprivatestorage.resource;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -75,6 +77,18 @@ public class MinioResource {
 			return ResponseEntity.ok("Objeto enviado com sucesso!");
 		} catch (MinioException e) {
 			return ResponseEntity.badRequest().body(e.getMessage());
+		}
+	}
+
+	@GetMapping(path = "/{bucketName}/{objectName}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	public ResponseEntity<Resource> downloadObject(@PathVariable("bucketName") String bucketName,
+			@PathVariable("objectName") String objectName) {
+		ByteArrayResource bar = null;
+		try {
+			bar = service.downloadObject(bucketName, objectName);
+			return ResponseEntity.ok(bar);
+		} catch (MinioException e) {
+			return ResponseEntity.badRequest().body(bar);
 		}
 	}
 }

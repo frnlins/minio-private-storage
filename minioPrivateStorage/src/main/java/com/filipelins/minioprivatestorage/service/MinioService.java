@@ -1,13 +1,16 @@
 package com.filipelins.minioprivatestorage.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -137,7 +140,22 @@ public class MinioService {
 		} catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | XmlParserException
 				| ErrorResponseException | InternalException | IllegalArgumentException | InsufficientDataException
 				| InvalidResponseException | IOException e) {
-			throw new MinioException("Não foi possível enviar o objeto ao bucket: '" + bucketName + "' ERROR: " + e.getMessage());
+			throw new MinioException(
+					"Não foi possível enviar o objeto ao bucket: '" + bucketName + "' ERROR: " + e.getMessage());
 		}
+	}
+
+	public ByteArrayResource downloadObject(String bucketName, String objectName) throws MinioException {
+		InputStream is = null;
+		ByteArrayResource bar = null;
+		try {
+			is = minioClient.getObject(bucketName, objectName);
+			bar = new ByteArrayResource(IOUtils.toByteArray(is));
+		} catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException
+				| XmlParserException | ErrorResponseException | InternalException | IllegalArgumentException
+				| InvalidResponseException | IOException e) {
+			throw new MinioException("Problema ao obter o objeto: '" + objectName + "' ERROR: " + e.getMessage());
+		}
+		return bar;
 	}
 }
