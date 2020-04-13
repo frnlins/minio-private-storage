@@ -68,9 +68,13 @@ public class MinioResource {
 	}
 
 	@PostMapping(path = "/{bucketName}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<Void> uploadObject(@RequestParam(name = "object") MultipartFile multipartFile,
+	public ResponseEntity<String> uploadObject(@RequestParam(name = "object") MultipartFile multipartFile,
 			@PathVariable("bucketName") String bucketName) {
-		service.uploadObject(bucketName, multipartFile);
-		return ResponseEntity.ok().build();
+		try {
+			service.uploadObject(bucketName, multipartFile);
+			return ResponseEntity.ok("Objeto enviado com sucesso!");
+		} catch (MinioException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
 	}
 }

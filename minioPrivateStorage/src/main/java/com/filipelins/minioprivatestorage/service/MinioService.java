@@ -130,15 +130,14 @@ public class MinioService {
 		}
 	}
 
-	public void uploadObject(String bucketName, MultipartFile multipartFile) {
+	public void uploadObject(String bucketName, MultipartFile multipartFile) throws MinioException {
 		PutObjectOptions pop = new PutObjectOptions(multipartFile.getSize(), -1);
 		try {
 			minioClient.putObject(bucketName, multipartFile.getOriginalFilename(), multipartFile.getInputStream(), pop);
 		} catch (InvalidKeyException | InvalidBucketNameException | NoSuchAlgorithmException | XmlParserException
 				| ErrorResponseException | InternalException | IllegalArgumentException | InsufficientDataException
 				| InvalidResponseException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new MinioException("Não foi possível enviar o objeto ao bucket: '" + bucketName + "' ERROR: " + e.getMessage());
 		}
 	}
 }
